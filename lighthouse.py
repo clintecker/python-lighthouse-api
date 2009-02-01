@@ -91,7 +91,9 @@ class Lighthouse(object):
 			p_obj = Project()
 			for field in project['children']:
 				field_name, field_value, field_type = self._parse_field(field)
-				print "%s: %s" % (field_name, field_value)
+				p_obj.__setattr__(field_name, field_value)
+			projects.append(p_obj)
+		return projects
 				
 class Ticket(object):
 	"""Tickets are individual issues or bugs"""
@@ -121,6 +123,12 @@ class Project(object):
 		self.open_states_list = open_states_list
 		self.closed_states_list = closed_states_list
 		self.open_tickets_count = open_tickets_count
+	
+	def __repr__(self):
+		if self.name:
+			return "Project: %s" % (self.name,)
+		else:
+			return "Project: Unnamed"
 
 class Milestone(object):
 	"""Milestones reference tickets"""

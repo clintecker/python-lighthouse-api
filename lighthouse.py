@@ -50,15 +50,11 @@ class Lighthouse(object):
 		10
 		>>> lh._integer('True')
 		Traceback (most recent call last):
-		  File "<stdin>", line 1, in <module>
-		  File "lighthouse.py", line 48, in _integer
-		    return int(data,10)
+		...
 		ValueError: invalid literal for int() with base 10: 'True'
 		>>> lh._integer('23.5')
 		Traceback (most recent call last):
-		  File "<stdin>", line 1, in <module>
-		  File "lighthouse.py", line 48, in _integer
-		    return int(data,10)
+		...
 		ValueError: invalid literal for int() with base 10: '23.5'
 		"""""
 		if data:
@@ -133,15 +129,25 @@ class Lighthouse(object):
 		
 		>>> lh = Lighthouse()
 		>>> lh._get_data('projects.xml')
-		Error: Please set token and url properly
+		Error: Please set url properly
+		>>> lh.url = 'http://ars.lighthouseapp.com'
+		>>> lh._get_data('projectx.xml')
+		Traceback (most recent call last):
+		...
+		ExpatError: mismatched tag: line 31, column 4
+		>>> lh.url = 'http://example.com'
+		>>> lh._get_data('projects.xml')
+		Traceback (most recent call last):
+		...
+		ExpatError: mismatched tag: line 31, column 4
 		"""
-		if self.token != None and self.url != None:
+		if self.url != None:
 			endpoint = os.path.join(self.url, path)
 			rh = urllib.urlopen(endpoint)
 			data = rh.read()
 			return self._parse_xml(data)
 		else:
-			print "Error: Please set token and url properly"
+			print "Error: Please set url properly"
 
 	def _parse_xml(self, xmldata):
 		return xmltodict(xmldata)
@@ -233,5 +239,5 @@ class User(object):
 		self.arg = arg
 		
 if __name__ == "__main__":
-    import doctest
-    doctest.testmod()
+	import doctest
+	doctest.testmod(optionflags=doctest.IGNORE_EXCEPTION_DETAIL)

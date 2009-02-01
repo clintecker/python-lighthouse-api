@@ -7,10 +7,12 @@ here:
 http://lighthouseapp.com/api
 
 -----------------------------------------------------
-Requires: dateutil - http://labix.org/python-dateutil
------------------------------------------------------
+Requires: 
+  * Python 2.4 - Because I am using a decorator ;)
+  * dateutil - http://labix.org/python-dateutil
+
 Installing:
 
-- Currently I am just symlinking lighthouse.py and xmltodict.py into my 
+  *Currently I am just symlinking lighthouse.py and xmltodict.py into my 
    PYTHONPATH.  Until I have an installer or something you should do the same.
 

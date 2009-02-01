@@ -1,0 +1,11 @@
+A Python interface to the Lighthouse bug tracking API.
+
+The Lighthouse API is a REST'ful XML API that lets you read and write
+nearly every object in your Lighthouse project.  The specification is
+here:
+
+http://lighthouseapp.com/api
+
+-----------------------------------------------------
+Requires: dateutil - http://labix.org/python-dateutil
+

@@ -8,4 +8,9 @@ http://lighthouseapp.com/api
 
 -----------------------------------------------------
 Requires: dateutil - http://labix.org/python-dateutil
+-----------------------------------------------------
+Installing:
+
+- Currently I am just symlinking lighthouse.py and xmltodict.py into my 
+   PYTHONPATH.  Until I have an installer or something you should do the same.
 

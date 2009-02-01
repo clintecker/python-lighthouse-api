@@ -28,6 +28,7 @@ class Lighthouse(object):
 		super(Lighthouse, self).__init__()
 		self.token = token
 		self.url = url
+		self.projects = []
 	
 	def _datetime(self, data):
 		"""Returns a datetime object representation of string
@@ -129,7 +130,9 @@ class Lighthouse(object):
 		
 		>>> lh = Lighthouse()
 		>>> lh._get_data('projects.xml')
-		Error: Please set url properly
+		Traceback (most recent call last):
+		...
+		ValueError: Please set url properly
 		>>> lh.url = 'http://ars.lighthouseapp.com'
 		>>> lh._get_data('projectx.xml')
 		Traceback (most recent call last):
@@ -147,7 +150,7 @@ class Lighthouse(object):
 			data = rh.read()
 			return self._parse_xml(data)
 		else:
-			print "Error: Please set url properly"
+			raise ValueError('Please set url properly')
 
 	def _parse_xml(self, xmldata):
 		return xmltodict(xmldata)
@@ -170,50 +173,98 @@ class Lighthouse(object):
 			field_value = converter(field_value)
 		
 		return (field_name, field_value, field_type)
+	
+	def init(self):
+		"""Pulls in all the projects available and populates them with
+		their properties"""
+		self.get_projects()
+		for p in self.projects:
+			self.get_tickets(p)
+		return
 		
-	@property	
-	def projects(self):
-		path = 'projects.xml'
+	def get_projects(self):
+		"""Retrieves all available projects
+		
+		>>> lh = Lighthouse()
+		>>> lh.url = 'http://ars.lighthouseapp.com'
+		>>> lh.init()
+		>>> project = lh.projects[0]
+		>>> len(lh.projects)
+		1
+		>>> project.name
+		'Ars Technica 5.0'
+		"""
+		path = Project.endpoint
 		project_list = self._get_data(path)
-		#pprint.pprint(project_list['children'][0]['children'])
 		projects = []
 		for project in project_list['children']:
 			p_obj = Project()
 			for field in project['children']:
 				field_name, field_value, field_type = self._parse_field(field)
-				p_obj.__setattr__(field_name, field_value)
+				p_obj.__setattr__(field_name.replace('-', '_'), field_value)
 			projects.append(p_obj)
-		return projects
+		self.projects = projects
+		return
+	
+	def get_tickets(self, project):
+		"""Retrieves all the tickets in a project
+		
+		>>> lh = Lighthouse()
+		>>> lh.url = 'http://ars.lighthouseapp.com'
+		>>> lh.init()
+		>>> project = lh.projects[0]
+		>>> lh.get_tickets(project)
+		>>> lh.get_tickets(123)
+		Traceback (most recent call last):
+		...
+		TypeError: Project must be instance of Project object
+		>>> lh.get_tickets('project')
+		Traceback (most recent call last):
+		...
+		TypeError: Project must be instance of Project object
+		"""
+		if isinstance(project, Project):
+			path = Ticket.endpoint % (project.id)
+			ticket_list = self._get_data(path)
+			tickets = []
+			for ticket in ticket_list['children']:
+				t_obj = Ticket()
+				for field in ticket['children']:
+					field_name, field_value, field_type = \
+						self._parse_field(field)
+					t_obj.__setattr__(field_name.replace('-', '_'),\
+						field_value)
+				tickets.append(t_obj)
+			project.tickets = tickets
+			return
+		else:
+			raise TypeError('Project must be instance of Project object')
 				
 class Ticket(object):
 	"""Tickets are individual issues or bugs"""
-	def __init__(self, arg):
+	
+	endpoint = 'projects/%d/tickets.xml'
+	
+	def __init__(self):
 		super(Ticket, self).__init__()
-		self.arg = arg
+		
+	def __repr__(self):
+		if self.title:
+			return "Ticket: %s" % (self.title,)
+		else:
+			return "Ticket: Unnamed"
 
 class Project(object):
 	"""Projects contain milestones, tickets, messages, and changesets"""
-	def __init__(self, archived=None, created_at=None,
-	description=None, p_id=None, name=None, open_tickets_count=None,
-	permalink=None, public=None, updated_at=None, open_states=None,
-	closed_states=None, open_states_list=None, closed_states_list=None):
-		
-		super(Project, self).__init__()
-		
-		self.archived 		= archived
-		self.created_at 	= created_at
-		self.description 	= description
-		self.id 			= p_id
-		self.name 			= name
-		self.permalink 		= permalink
-		self.public			= public
-		self.updated_at		= updated_at
-		self.open_states	= open_states
-		self.closed_states	= closed_states
-		self.open_states_list = open_states_list
-		self.closed_states_list = closed_states_list
-		self.open_tickets_count = open_tickets_count
 	
+	endpoint = 'projects.xml'
+	
+	def __init__(self):
+		super(Project, self).__init__()
+		self.tickets = []
+		self.milestones = []
+		self.messages = []
+
 	def __repr__(self):
 		if self.name:
 			return "Project: %s" % (self.name,)

@@ -30,24 +30,101 @@ class Lighthouse(object):
 		self.url = url
 	
 	def _datetime(self, data):
+		"""Returns a datetime object representation of string
+		
+		>>> lh = Lighthouse()
+		>>> lh._datetime('2008-09-25T20:04:13+01:00')
+		datetime.datetime(2008, 9, 25, 20, 4, 13, tzinfo=tzoffset(None, 3600))
+		>>> lh._datetime('2009-01-26T16:47:00-08:00')
+		datetime.datetime(2009, 1, 26, 16, 47, tzinfo=tzoffset(None, -28800))
+		>>> lh._datetime('2009-01-31T15:42:18-08:00')
+		datetime.datetime(2009, 1, 31, 15, 42, 18, tzinfo=tzoffset(None, -28800))
+		"""
 		return parse(data)
 	
 	def _integer(self, data):
+		"""Returns a literal integer object from a string"
+		
+		>>> lh = Lighthouse()
+		>>> lh._integer('10')
+		10
+		>>> lh._integer('True')
+		Traceback (most recent call last):
+		  File "<stdin>", line 1, in <module>
+		  File "lighthouse.py", line 48, in _integer
+		    return int(data,10)
+		ValueError: invalid literal for int() with base 10: 'True'
+		>>> lh._integer('23.5')
+		Traceback (most recent call last):
+		  File "<stdin>", line 1, in <module>
+		  File "lighthouse.py", line 48, in _integer
+		    return int(data,10)
+		ValueError: invalid literal for int() with base 10: '23.5'
+		"""""
 		if data:
 			return int(data,10)
 		else:
 			return None
 	
 	def _boolean(self, data):
-		if data == 'true' or data == '1' or data == 1:
+		"""Returns True or False from a string
+		
+		>>> lh = Lighthouse()
+		>>> lh._boolean('1')
+		True
+		>>> lh._boolean('2')
+		False
+		>>> lh._boolean('true')
+		True
+		>>> lh._boolean('True')
+		True
+		>>> lh._boolean('false')
+		False
+		>>> lh._boolean('False')
+		False
+		>>> lh._boolean(1)
+		True
+		>>> lh._boolean(2)
+		False
+		>>> lh._boolean(0)
+		False
+		"""
+		if data == 'true' or data == 'True' or data == '1' or data == 1:
 			return True
 		else:
 			return False
 	
 	def _string(self, data):
-		return data
+		"""Returns a...uh string from a bit of data
+		
+		>>> lh = Lighthouse()
+		>>> lh._string('lol')
+		'lol'
+		>>> lh._string(1)
+		'1'
+		>>> lh._string(True)
+		'True'
+		>>> lh._string('2008-09-25T20:04:13+01:00')
+		'2008-09-25T20:04:13+01:00'
+		>>> lh._datetime('2008-09-25T20:04:13+01:00')
+		datetime.datetime(2008, 9, 25, 20, 4, 13, tzinfo=tzoffset(None, 3600))
+		>>> lh._string(_)
+		'2008-09-25 20:04:13+01:00'
+		"""
+		return str(data)
 	
-	def _nil(self):
+	def _nil(self, data):
+		"""Returns None
+		
+		>>> lh = Lighthouse()
+		>>> lh._nil('lol')
+		>>> lh._nil(1)
+		>>> lh._nil(True)
+		>>> lh._nil('2008-09-25T20:04:13+01:00')
+		>>> lh._datetime('2008-09-25T20:04:13+01:00')
+		datetime.datetime(2008, 9, 25, 20, 4, 13, tzinfo=tzoffset(None, 3600))
+		>>> lh._nil(_)
+		"""
 		return None
 	
 	def _get_data(self, path):
@@ -146,4 +223,8 @@ class User(object):
 	"""A user"""
 	def __init__(self, arg):
 		super(User, self).__init__()
-		self.arg = arg	 
+		self.arg = arg
+		
+if __name__ == "__main__":
+    import doctest
+    doctest.testmod()

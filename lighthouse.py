@@ -206,7 +206,27 @@ class Lighthouse(object):
 		self.projects = projects
 		return
 	
-	def get_tickets(self, project):
+	def get_all_tickets(self, project):
+		"""Populates the project with all existing tickets
+		
+		>>> lh = Lighthouse()
+		>>> lh = Lighthouse()
+		>>> lh.url = 'http://ars.lighthouseapp.com'
+		>>> lh.init()
+		>>> project = lh.projects[0]
+		>>> lh.get_all_tickets(project)
+		
+		>>>
+		"""
+		c = 30
+		page = 1
+		ticket_count = 0
+		while c == 30:
+			c = self.get_tickets(project, page)
+			ticket_count += c
+			page += 1
+		
+	def get_tickets(self, project, page=1):
 		"""Retrieves all the tickets in a project
 		
 		>>> lh = Lighthouse()
@@ -214,6 +234,23 @@ class Lighthouse(object):
 		>>> lh.init()
 		>>> project = lh.projects[0]
 		>>> lh.get_tickets(project)
+		30
+		>>> lh.get_tickets(project, 2)
+		30
+		>>> lh.get_tickets(project, 1000)
+		0
+		>>> lh.get_tickets(project, 0)
+		Traceback (most recent call last):
+		...
+		ValueError: Page number should be 1-indexed
+		>>> lh.get_tickets(project, -1)
+		Traceback (most recent call last):
+		...
+		ValueError: Page number should be 1-indexed
+		>>> lh.get_tickets(project, '1')
+		Traceback (most recent call last):
+		...
+		TypeError: Page number should be of type Integer
 		>>> lh.get_tickets(123)
 		Traceback (most recent call last):
 		...
@@ -223,22 +260,26 @@ class Lighthouse(object):
 		...
 		TypeError: Project must be instance of Project object
 		"""
-		if isinstance(project, Project):
-			path = Ticket.endpoint % (project.id)
-			ticket_list = self._get_data(path)
-			tickets = []
+		if not isinstance(project, Project):
+			raise TypeError('Project must be instance of Project object')
+		if not isinstance(page, int):
+			raise TypeError('Page number should be of type Integer')
+		if page <= 0:
+			raise ValueError('Page number should be 1-indexed')
+		path = Ticket.endpoint % (project.id)
+		ticket_list = self._get_data(path+"?page=" + str(page))
+		c = 0
+		if(ticket_list.get('children', None)):
 			for ticket in ticket_list['children']:
+				c += 1
 				t_obj = Ticket()
 				for field in ticket['children']:
 					field_name, field_value, field_type = \
 						self._parse_field(field)
 					t_obj.__setattr__(field_name.replace('-', '_'),\
 						field_value)
-				tickets.append(t_obj)
-			project.tickets = tickets
-			return
-		else:
-			raise TypeError('Project must be instance of Project object')
+				project.tickets[t_obj.number] = t_obj
+		return c
 				
 class Ticket(object):
 	"""Tickets are individual issues or bugs"""
@@ -261,7 +302,7 @@ class Project(object):
 	
 	def __init__(self):
 		super(Project, self).__init__()
-		self.tickets = []
+		self.tickets = {}
 		self.milestones = []
 		self.messages = []
 

@@ -128,6 +128,13 @@ class Lighthouse(object):
 		return None
 	
 	def _get_data(self, path):
+		"""Takes a path, joins it with the project's URL and grabs that 
+		resource's XML data
+		
+		>>> lh = Lighthouse()
+		>>> lh._get_data('projects.xml')
+		Error: Please set token and url properly
+		"""
 		if self.token != None and self.url != None:
 			endpoint = os.path.join(self.url, path)
 			rh = urllib.urlopen(endpoint)

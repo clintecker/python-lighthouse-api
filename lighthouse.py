@@ -13,7 +13,8 @@
 #  Created by Clinton Ecker on 2009-01-31.
 #  Copyright 2009 Clint Ecker. All rights reserved.
 # 
-import urllib
+import urllib2
+from urllib2 import HTTPError
 import os.path
 import pprint
 from xmltodict import xmltodict
@@ -137,21 +138,44 @@ class Lighthouse(object):
 		>>> lh._get_data('projectx.xml')
 		Traceback (most recent call last):
 		...
-		ExpatError: mismatched tag: line 31, column 4
+		ExpatError: mismatched tag: line 30, column 4
 		>>> lh.url = 'http://example.com'
 		>>> lh._get_data('projects.xml')
 		Traceback (most recent call last):
 		...
-		ExpatError: mismatched tag: line 31, column 4
+		HTTPError: HTTP Error 404: Not Found
 		"""
 		if self.url != None:
 			endpoint = os.path.join(self.url, path)
-			rh = urllib.urlopen(endpoint)
-			data = rh.read()
+			req = urllib2.Request(endpoint)
+			resp = urllib2.urlopen(req)
+			data = resp.read()
 			return self._parse_xml(data)
 		else:
 			raise ValueError('Please set url properly')
-
+	
+	def _post_data(self, path, data):
+		if self.url == None:
+			raise ValueError('Please set url properly')
+		if self.token == None:
+			raise ValueError('Please set token properly')
+		endpoint = os.path.join(self.url, path)
+		headers = { 
+			'Content-Type' : 'application/xml',
+			'X-LighthouseToken' : self.token,
+		}
+		req = urllib2.Request(endpoint, data, headers)
+		try:
+			response = urllib2.urlopen(req)
+		except HTTPError, response:
+			if response.code == 201:
+				data = response.read()
+			else:
+				raise
+		else:
+			raise
+		return self._parse_xml(data)
+			
 	def _parse_xml(self, xmldata):
 		return xmltodict(xmldata)
 	
@@ -280,12 +304,44 @@ class Lighthouse(object):
 						field_value)
 				project.tickets[t_obj.number] = t_obj
 		return c
-				
+	
+	def get_users(self, name):
+		pass
+		
+	def add_ticket(self, project=None, title=None, body=None):
+		if project is None or isinstance(project, str):
+			if(len(self.projects) == 0):
+				self.init()
+			project = self.projects[0]
+			project_id = project.id
+		elif isinstance(project, int):
+			project_id = project
+		elif isinstance(project, Project):
+			project_id = project.id
+		else:
+			raise ValueError('Couldn\'t find a project matching \''+project+'\'')
+		path = Ticket.endpoint % (project_id,)
+		data = Ticket.creation_xml % {
+			'body':body, 
+			'title':title,
+		}
+		new_ticket = self._post_data(path, data)
+		t_obj = Ticket()
+		for field in new_ticket['children']:
+			field_name, field_value, field_type = \
+				self._parse_field(field)
+			t_obj.__setattr__(field_name.replace('-', '_'),\
+				field_value)
+		return t_obj
+		
 class Ticket(object):
 	"""Tickets are individual issues or bugs"""
 	
 	endpoint = 'projects/%d/tickets.xml'
-	
+	creation_xml = """<ticket>
+	<body>%(body)s</body>
+	<title>%(title)s</title>
+</ticket>"""
 	def __init__(self):
 		super(Ticket, self).__init__()
 		

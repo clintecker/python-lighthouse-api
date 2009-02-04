@@ -26,7 +26,7 @@ class Lighthouse(object):
 	"""The main lighthouse object for managing the connection"""
 	
 	def __init__(self, token=None, url=None):
-		super(Lighthouse, self).__init__()
+		#super(Lighthouse, self).__init__()
 		self.token = token
 		self.url = url
 		self.projects = []

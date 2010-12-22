@@ -163,6 +163,8 @@ class Lighthouse(object):
 		if self.url != None:
 			endpoint = os.path.join(self.url, path)
 			req = urllib2.Request(endpoint)
+			if self.token:
+				req.add_header('X-LighthouseToken', self.token)
 			resp = urllib2.urlopen(req)
 			data = resp.read()
 			return self._parse_xml(data)

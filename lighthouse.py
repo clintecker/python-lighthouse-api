@@ -325,7 +325,19 @@ class Lighthouse(object):
 					t_obj.fields.add(py_field_name)
 				project.tickets[t_obj.number] = t_obj
 		return c
-	
+
+	def get_full_ticket(self, project, ticket):
+		path = Ticket.endpoint_single % (project.id, ticket.number)
+		ticket_data = self._get_data(path)
+		for field in ticket_data['children']:
+			field_name, field_value, field_type = \
+				self._parse_field(field)
+			py_field_name = field_name.replace('-', '_')
+			ticket.__setattr__(py_field_name, field_value)
+			ticket.fields.add(py_field_name)
+
+		return ticket
+			
 	def get_users(self, name):
 		pass
 		
@@ -354,11 +366,12 @@ class Lighthouse(object):
 			t_obj.__setattr__(field_name.replace('-', '_'),\
 				field_value)
 		return t_obj
-		
+	
 class Ticket(object):
 	"""Tickets are individual issues or bugs"""
 	
 	endpoint = 'projects/%d/tickets.xml'
+	endpoint_single = 'projects/%d/tickets/%d.xml'
 	creation_xml = """<ticket>
 	<body>%(body)s</body>
 	<title>%(title)s</title>

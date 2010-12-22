@@ -110,6 +110,9 @@ class Lighthouse(object):
 		'2008-09-25 20:04:13+01:00'
 		"""
 		return str(data)
+
+	def _yaml(self, data):
+		return self._string(data)
 	
 	def _nil(self, data):
 		"""Returns None

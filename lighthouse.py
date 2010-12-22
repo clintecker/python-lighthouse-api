@@ -320,8 +320,9 @@ class Lighthouse(object):
 				for field in ticket['children']:
 					field_name, field_value, field_type = \
 						self._parse_field(field)
-					t_obj.__setattr__(field_name.replace('-', '_'),\
-						field_value)
+					py_field_name = field_name.replace('-', '_')
+					t_obj.__setattr__(py_field_name, field_value)
+					t_obj.fields.add(py_field_name)
 				project.tickets[t_obj.number] = t_obj
 		return c
 	
@@ -364,13 +365,19 @@ class Ticket(object):
 </ticket>"""
 	def __init__(self):
 		super(Ticket, self).__init__()
+		self.versions = []
+		self.attachments = []
+		self.fields = set()
 		
 	def __repr__(self):
 		if self.title:
 			return "Ticket: %s" % (self.title,)
 		else:
 			return "Ticket: Unnamed"
-
+		
+	def to_json_obj(self):
+		return dict([(f, getattr(self, f)) for f in self.fields])
+	
 class Project(object):
 	"""Projects contain milestones, tickets, messages, and changesets"""
 	

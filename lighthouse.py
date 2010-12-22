@@ -128,6 +128,18 @@ class Lighthouse(object):
 		"""
 		return None
 	
+	def _array(self, data):
+		"""Returns an array
+		"""
+		r = []
+		for item in data['children']:
+			item_obj = {}
+			for field in item['children']:
+				field_name, field_value, field_type = self._parse_field(field)
+				item_obj[field_name.replace('-', '_')] = field_value
+			r.append(item_obj)
+		return r
+
 	def _get_data(self, path):
 		"""Takes a path, joins it with the project's URL and grabs that 
 		resource's XML data
@@ -195,7 +207,10 @@ class Lighthouse(object):
 		if attributes:
 			field_type = attributes.get('type', None)
 
-		if field_type:
+		if field_type == "array":
+			field_value = self._array(field)
+
+		elif field_type and (field_value is not None):
 			converter = getattr(self,'_'+field_type)
 			field_value = converter(field_value)
 		
